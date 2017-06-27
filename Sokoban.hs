@@ -94,34 +94,50 @@ walkDown _ _ = do
 moveBoxRight :: IOGame GameAttribute () () () ()
 moveBoxRight = do
  obj <- findObject "box" "boxGroup"
+ obj2 <-findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
+ (pX2,pY2) <- getObjectPosition obj2	
  if (pX + 75 <= w)
    then do (setObjectPosition ((pX + 50),pY) obj)
+	   (setObjectPosition ((pX2 + 50),pY2) obj2)
    else do (setObjectPosition ((w - 25),pY) obj)
+	   (setObjectPosition ((w - 25),pY2) obj2)
 
 moveBoxLeft :: IOGame GameAttribute () () () ()
 moveBoxLeft = do
  obj <- findObject "box" "boxGroup"
+ obj2 <-findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
+ (pX2,pY2) <- getObjectPosition obj2
  if (pX - 75 >= 0)
    then do (setObjectPosition ((pX - 50),pY) obj)
+	   (setObjectPosition ((pX2 - 50),pY2) obj2)
    else do (setObjectPosition (25,pY) obj)
+	   (setObjectPosition (25,pY2) obj2)
 
 moveBoxUp :: IOGame GameAttribute () () () ()
 moveBoxUp = do
  obj <- findObject "box" "boxGroup"
+ obj2 <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
+ (pX2,pY2) <- getObjectPosition obj2
  if (pY + 75 <= h)
    then do (setObjectPosition (pX,(pY + 50)) obj)
+	   (setObjectPosition (pX2,(pY2 + 50)) obj2)
    else do (setObjectPosition (pX,(w - 25)) obj)
+	   (setObjectPosition (pX2,(w - 25)) obj2)
 
 moveBoxDown :: IOGame GameAttribute () () () ()
 moveBoxDown = do
  obj <- findObject "box" "boxGroup"
+ obj2 <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
+ (pX2,pY2) <- getObjectPosition obj2
  if (pY - 75 >= 0)
    then do (setObjectPosition (pX,(pY - 50)) obj)
+	   (setObjectPosition (pX2,(pY2 - 50)) obj2)
    else do (setObjectPosition (pX,25) obj)
+	   (setObjectPosition (pX2,25) obj2)
 
 gameCycle :: IOGame GameAttribute () () () ()
 gameCycle = do
