@@ -5,8 +5,8 @@ import Graphics.Rendering.OpenGL (GLdouble)
 
 data GameAttribute = Score Int
 
-width = 1000
-height = 1000
+width = 500
+height = 500
 w = fromIntegral width :: GLdouble
 h = fromIntegral height :: GLdouble
 
@@ -19,7 +19,7 @@ main = do
             gameMap = textureMap 0 50 50 w h
             guy    = objectGroup "guyGroup"  [createGuy]
             box   = objectGroup "boxGroup" [createBox]
-            endPoint = objectGroup "endGroup" [createEndPoint 1.0 0.0]
+            endPoint = objectGroup "endGroup" [createEndPoint]
             initScore = Score 0
             input = [(Char 'w', Press, walkUp),
                      (Char 'a', Press, walkLeft),
@@ -37,10 +37,10 @@ createBox = let boxBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
                 boxPic = Basic (Polyg boxBound 1.0 1.0 0.0 Filled)
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
-createEndPoint :: Float -> Float -> GameObject ()
-createEndPoint corR corG = let endPointBound = [(-26,-26),(26,-26),(26,26),(-26,26)]
-                               endPointPic = Basic (Polyg endPointBound corR corG 0.0 Unfilled)
-                           in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4)-25)) (0,0) ()
+createEndPoint :: GameObject ()
+createEndPoint = let endPointBound = [(-26,-26),(26,-26),(26,26),(-26,26)]
+                     endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
+                 in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
 
 walkRight :: Modifiers -> Position -> IOGame GameAttribute () () () ()
 walkRight _ _ = do
@@ -49,8 +49,7 @@ walkRight _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if ((pX + 75) == p2X && pY==p2Y)
-   then when (p2X + 75 <= w) (do moveBoxRight
-                                 walkRight)
+   then when (p2X + 75 <= w) moveBoxRight
    else do if (pX + 75 <= w)
              then do (setObjectPosition ((pX + 50),pY) obj)
              else do (setObjectPosition ((w - 25),pY) obj)
@@ -63,8 +62,7 @@ walkLeft _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if ((pX - 75) == p2X && pY==p2Y)
-   then when (p2X - 75 >= w) (do moveBoxLeft
-                                 walkLeft)
+   then when (p2X - 75 >= w) moveBoxLeft
    else do if (pX - 75 >= 0)
              then do (setObjectPosition ((pX - 50),pY) obj)
              else do (setObjectPosition (25,pY) obj)
@@ -76,8 +74,7 @@ walkUp _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if (pX == p2X && (pY + 75)==p2Y)
-   then when (p2Y + 75 <= h) (do moveBoxUp
-                                 walkUp)
+   then when (p2Y + 75 <= h) moveBoxUp
    else do if (pY + 75 <= h)
              then do (setObjectPosition (pX,(pY + 50)) obj)
              else do (setObjectPosition (pX,(w - 25)) obj)
@@ -89,38 +86,37 @@ walkDown _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if (pX == p2X && (pY - 75)==p2Y)
-   then when (p2Y - 75 >= 0) (do moveBoxDown
-                                 walkDown)
+   then when (p2Y - 75 >= 0) moveBoxDown
    else do if (pY - 75 >= 0)
              then do (setObjectPosition (pX,(pY - 50)) obj)
              else do (setObjectPosition (pX,25) obj)
 
-moveBoxRight :: Modifiers -> Position -> IOGame GameAttribute () () () ()
-moveBoxRight _ _ = do
+moveBoxRight :: IOGame GameAttribute () () () ()
+moveBoxRight = do
  obj <- findObject "box" "boxGroup"
  (pX,pY) <- getObjectPosition obj
  if (pX + 75 <= w)
    then do (setObjectPosition ((pX + 50),pY) obj)
    else do (setObjectPosition ((w - 25),pY) obj)
 
-moveBoxLeft :: Modifiers -> Position -> IOGame GameAttribute () () () ()
-moveBoxLeft _ _ = do
+moveBoxLeft :: IOGame GameAttribute () () () ()
+moveBoxLeft = do
  obj <- findObject "box" "boxGroup"
  (pX,pY) <- getObjectPosition obj
  if (pX - 75 >= 0)
    then do (setObjectPosition ((pX - 50),pY) obj)
    else do (setObjectPosition (25,pY) obj)
 
-moveBoxUp :: Modifiers -> Position -> IOGame GameAttribute () () () ()
-moveBoxUp _ _ = do
+moveBoxUp :: IOGame GameAttribute () () () ()
+moveBoxUp = do
  obj <- findObject "box" "boxGroup"
  (pX,pY) <- getObjectPosition obj
  if (pY + 75 <= h)
    then do (setObjectPosition (pX,(pY + 50)) obj)
    else do (setObjectPosition (pX,(w - 25)) obj)
 
-moveBoxDown :: Modifiers -> Position -> IOGame GameAttribute () () () ()
-moveBoxDown _ _ = do
+moveBoxDown :: IOGame GameAttribute () () () ()
+moveBoxDown = do
  obj <- findObject "box" "boxGroup"
  (pX,pY) <- getObjectPosition obj
  if (pY - 75 >= 0)
@@ -135,6 +131,5 @@ gameCycle = do
  box <- findObject "box" "boxGroup"
  endPoint <- findObject "endPoint" "endGroup"
  col <- objectsCollision box endPoint
- when col $ do
-   destroyGameObject "endPoint" "endGroup"
-   createEndPoint 0.0 1.0
+ when col (setGameAttribute (Score (n + 10)))
+ --Rafael mandou usar setObjectCurrentPicture pra mudar a textura de um obj
