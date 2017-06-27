@@ -21,7 +21,7 @@ bmpList :: FilePictureList
 bmpList = [("tile.bmp", Nothing),
            ("box.bmp", magenta)]
 
-tileSize :: Double
+tileSize :: GLdouble
 tileSize = 50.0
 
 t::SokobanTile
