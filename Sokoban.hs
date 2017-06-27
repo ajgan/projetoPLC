@@ -37,9 +37,9 @@ createBox = let boxBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
                 boxPic = Basic (Polyg boxBound 1.0 1.0 0.0 Filled)
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
-createEndPoint :: GLdouble -> GLdouble -> GameObject ()
+createEndPoint :: Float -> Float -> GameObject ()
 createEndPoint corR corG = let endPointBound = [(-26,-26),(26,-26),(26,26),(-26,26)]
-                               endPointPic = Basic (Polyg boxBound corR corG 0.0 Unfilled)
+                               endPointPic = Basic (Polyg endPointBound corR corG 0.0 Unfilled)
                            in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4)-25)) (0,0) ()
 
 walkRight :: Modifiers -> Position -> IOGame GameAttribute () () () ()
@@ -49,10 +49,8 @@ walkRight _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if ((pX + 75) == p2X && pY==p2Y)
-   then do if (p2X + 75 <= w)
-             then do moveBoxRight
-                     walkRight
-             else do obj3 <- findObject "guy" "guyGroup" --erro aqui: so coloquei essa linha pra ter um else, mas nao uso isso pra nada
+   then when (p2X + 75 <= w) (do moveBoxRight
+                                 walkRight)
    else do if (pX + 75 <= w)
              then do (setObjectPosition ((pX + 50),pY) obj)
              else do (setObjectPosition ((w - 25),pY) obj)
@@ -65,10 +63,8 @@ walkLeft _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if ((pX - 75) == p2X && pY==p2Y)
-   then do if (p2X - 75 >= w)
-             then do moveBoxLeft
-                     walkLeft
-             else do obj3 <- findObject "guy" "guyGroup" --erro aqui: so coloquei essa linha pra ter um else, mas nao uso isso pra nada
+   then when (p2X - 75 >= w) (do moveBoxLeft
+                                 walkLeft)
    else do if (pX - 75 >= 0)
              then do (setObjectPosition ((pX - 50),pY) obj)
              else do (setObjectPosition (25,pY) obj)
@@ -80,10 +76,8 @@ walkUp _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if (pX == p2X && (pY + 75)==p2Y)
-   then do if (p2Y + 75 <= h)
-             then do moveBoxUp
-                     walkUp
-             else do obj3 <- findObject "guy" "guyGroup" --erro aqui: so coloquei essa linha pra ter um else, mas nao uso isso pra nada
+   then when (p2Y + 75 <= h) (do moveBoxUp
+                                 walkUp)
    else do if (pY + 75 <= h)
              then do (setObjectPosition (pX,(pY + 50)) obj)
              else do (setObjectPosition (pX,(w - 25)) obj)
@@ -95,10 +89,8 @@ walkDown _ _ = do
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
  if (pX == p2X && (pY - 75)==p2Y)
-   then do if (p2Y - 75 >= 0)
-             then do moveBoxDown
-                     walkDown
-             else do obj3 <- findObject "guy" "guyGroup" --erro aqui: so coloquei essa linha pra ter um else, mas nao uso isso pra nada
+   then when (p2Y - 75 >= 0) (do moveBoxDown
+                                 walkDown)
    else do if (pY - 75 >= 0)
              then do (setObjectPosition (pX,(pY - 50)) obj)
              else do (setObjectPosition (pX,25) obj)
