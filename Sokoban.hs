@@ -38,7 +38,7 @@ createBox = let boxBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
 createEndPoint :: GameObject ()
-createEndPoint = let endPointBound = [(-26,-26),(26,-26),(26,26),(-26,26)]
+createEndPoint = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
                  in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
 
@@ -48,7 +48,7 @@ walkRight _ _ = do
  (pX,pY) <- getObjectPosition obj
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
- if ((pX + 75) == p2X && pY==p2Y)
+ if ((pX + 50) == p2X && pY==p2Y)
    then when (p2X + 75 <= w) moveBoxRight
    else do if (pX + 75 <= w)
              then do (setObjectPosition ((pX + 50),pY) obj)
@@ -61,8 +61,8 @@ walkLeft _ _ = do
  (pX,pY) <- getObjectPosition obj
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
- if ((pX - 75) == p2X && pY==p2Y)
-   then when (p2X - 75 >= w) moveBoxLeft
+ if ((pX - 50) == p2X && pY==p2Y)
+   then when (p2X - 75 >= 0) moveBoxLeft
    else do if (pX - 75 >= 0)
              then do (setObjectPosition ((pX - 50),pY) obj)
              else do (setObjectPosition (25,pY) obj)
@@ -73,7 +73,7 @@ walkUp _ _ = do
  (pX,pY) <- getObjectPosition obj
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
- if (pX == p2X && (pY + 75)==p2Y)
+ if (pX == p2X && (pY + 50)==p2Y)
    then when (p2Y + 75 <= h) moveBoxUp
    else do if (pY + 75 <= h)
              then do (setObjectPosition (pX,(pY + 50)) obj)
@@ -85,7 +85,7 @@ walkDown _ _ = do
  (pX,pY) <- getObjectPosition obj
  obj2 <- findObject "box" "boxGroup"
  (p2X,p2Y) <- getObjectPosition obj2
- if (pX == p2X && (pY - 75)==p2Y)
+ if (pX == p2X && (pY - 50)==p2Y)
    then when (p2Y - 75 >= 0) moveBoxDown
    else do if (pY - 75 >= 0)
              then do (setObjectPosition (pX,(pY - 50)) obj)
@@ -130,6 +130,14 @@ gameCycle = do
  guy <- findObject "guy" "guyGroup"
  box <- findObject "box" "boxGroup"
  endPoint <- findObject "endPoint" "endGroup"
- col <- objectsCollision box endPoint
- when col (setGameAttribute (Score (n + 10)))
+ (pX,pY) <- getObjectPosition guy
+ printOnScreen (show pX) TimesRoman24 (0,100) 1.0 1.0 1.0
+ printOnScreen (show pY) TimesRoman24 (0,150) 1.0 1.0 1.0
+ (pX2,pY2) <- getObjectPosition box
+ printOnScreen (show pX2) TimesRoman24 (0,200) 1.0 1.0 1.0
+ printOnScreen (show pY2) TimesRoman24 (0,250) 1.0 1.0 1.0
+ col <- objectsCollision guy box
+ col2 <- objectsCollision box endPoint
+ when col2 (setGameAttribute (Score (n + 10)))
+
  --Rafael mandou usar setObjectCurrentPicture pra mudar a textura de um obj
