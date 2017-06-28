@@ -78,20 +78,28 @@ main = do
             gameMap = multiMap [(tileMap map1 tileSize tileSize),
                                 (tileMap map2 tileSize tileSize),
                                 (tileMap map3 tileSize tileSize)] 0
-            guy = objectGroup "guyGroup"  [createGuy]
-            box = objectGroup "boxGroup" [createBox, createBox2, createBox3]
             endPoint = objectGroup "endGroup" [createEndPoint, createEndPoint2, createEndPoint3]
+            box = objectGroup "boxGroup" [createBox, createBox2, createBox3]
+            guy = objectGroup "guyGroup"  [createGuy]
             initScore = Score 0
             input = [(Char 'w', Press, walkUp),
                      (Char 'a', Press, walkLeft),
                      (Char 's', Press, walkDown),
                      (Char 'd', Press, walkRight),
                      (Char 'p', Press, \_ _ -> funExit)]
-        funInit winConfig gameMap [guy,box,endPoint] (GameInit 1) initScore input gameCycle (Timer 40) bmpList
+        funInit winConfig gameMap [endPoint,box,guy] (GameInit 1) initScore input gameCycle (Timer 40) bmpList
 
-createGuy :: SokobanObject
-createGuy = let guyPic = Basic (Circle 10.0 1.0 0.0 1.0 Filled)
-             in object "guy" guyPic False (((w/2)-25),25) (0,0) ()
+createEndPoint :: SokobanObject
+createEndPoint = let endPointPic = Tex (tileSize , tileSize) 4
+                 in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
+
+createEndPoint2 :: SokobanObject
+createEndPoint2 = let endPointPic = Tex (tileSize , tileSize) 4
+                  in object "endPoint2" endPointPic False (((w/2)-75),(((3*h)/4))) (0,0) ()
+
+createEndPoint3 :: SokobanObject
+createEndPoint3 = let endPointPic = Tex (tileSize , tileSize) 4
+                  in object "endPoint3" endPointPic False (((w/2)+25),(((3*h)/4))) (0,0) ()
 
 createBox :: SokobanObject
 createBox = let boxPic = Tex (tileSize , tileSize) 1
@@ -105,20 +113,9 @@ createBox3 :: SokobanObject
 createBox3 = let boxPic = Tex (tileSize , tileSize) 1
              in object "box3" boxPic False (((w/2)+25),((h/2)-25)) (0,0) ()
 
-createEndPoint :: SokobanObject
-createEndPoint = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
-                     endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
-                 in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
-
-createEndPoint2 :: SokobanObject
-createEndPoint2 = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
-                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
-                  in object "endPoint2" endPointPic False (((w/2)-75),(((3*h)/4))) (0,0) ()
-
-createEndPoint3 :: SokobanObject
-createEndPoint3 = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
-                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
-                  in object "endPoint3" endPointPic False (((w/2)+25),(((3*h)/4))) (0,0) ()
+createGuy :: SokobanObject
+createGuy = let guyPic = Basic (Circle 10.0 1.0 0.0 1.0 Filled)
+            in object "guy" guyPic False (((w/2)-25),25) (0,0) ()
 
 walkRight :: Modifiers -> Position -> SokobanAction ()
 walkRight _ _ = do
@@ -162,27 +159,43 @@ walkLeft _ _ = do
 
 walkUp :: Modifiers -> Position -> SokobanAction ()
 walkUp _ _ = do
- obj <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
- box <- findObject "box" "boxGroup"
- (pXbox,pYbox) <- getObjectPosition box
- if (pX == pXbox && (pY + 50)==pYbox)
-   then when (pYbox + 75 <= h) (moveBoxUp box)
-   else do if (pY + 75 <= h)
-             then do (setObjectPosition (pX,(pY + 50)) obj)
-             else do (setObjectPosition (pX,(w - 25)) obj)
+  guy <- findObject "guy" "guyGroup"
+  (pX,pY) <- getObjectPosition guy
+  box <- findObject "box" "boxGroup"
+  (pXbox,pYbox) <- getObjectPosition box
+  box2 <- findObject "box2" "boxGroup"
+  (pXbox2,pYbox2) <- getObjectPosition box2
+  box3 <- findObject "box3" "boxGroup"
+  (pXbox3,pYbox3) <- getObjectPosition box3
+  if (pX == pXbox && (pY+50)==pYbox)
+    then when ((pYbox + 75 <= h) && ((pXbox2 /= pXbox) || pYbox2/=pYbox +50) && ((pXbox3 /= pXbox) || pYbox3 /= pYbox +50)) (moveBoxUp box)
+    else do if (pX == pXbox2 && pY+50==pYbox2)
+              then when ((pYbox2 + 50 <= h) && ((pXbox /= pXbox2) || pYbox/=pYbox2 + 50) && ((pXbox3 /= pXbox2) || pYbox3/=pYbox2 + 50)) (moveBoxUp box2)
+              else do if (pX == pXbox3 && pY+50==pYbox3)
+                        then when ((pYbox3 + 50 <= h) && ((pXbox2 /= pXbox3) || pYbox2/=pYbox3+50) && ((pXbox /= pXbox3) || pYbox/=pYbox3+50)) (moveBoxUp box3)
+                        else do if (pY + 75 <= h)
+                                  then do (setObjectPosition (pX,(pY+50)) guy)
+                                  else do (setObjectPosition (pX,(h-25)) guy)
 
 walkDown :: Modifiers -> Position -> SokobanAction ()
 walkDown _ _ = do
- obj <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
- box <- findObject "box" "boxGroup"
- (pXbox,pYbox) <- getObjectPosition box
- if (pX == pXbox && (pY - 50)==pYbox)
-   then when (pYbox - 75 >= 0) (moveBoxDown box)
-   else do if (pY - 75 >= 0)
-             then do (setObjectPosition (pX,(pY - 50)) obj)
-             else do (setObjectPosition (pX,25) obj)
+  guy <- findObject "guy" "guyGroup"
+  (pX,pY) <- getObjectPosition guy
+  box <- findObject "box" "boxGroup"
+  (pXbox,pYbox) <- getObjectPosition box
+  box2 <- findObject "box2" "boxGroup"
+  (pXbox2,pYbox2) <- getObjectPosition box2
+  box3 <- findObject "box3" "boxGroup"
+  (pXbox3,pYbox3) <- getObjectPosition box3
+  if (pX == pXbox && (pY-50)==pYbox)
+    then when ((pYbox - 75 >= 0) && ((pXbox2 /= pXbox) || pYbox2/=pYbox -50) && ((pXbox3 /= pXbox) || pYbox3 /= pYbox -50)) (moveBoxDown box)
+    else do if (pX == pXbox2 && pY-50==pYbox2)
+              then when ((pYbox2 + 50 <= h) && ((pXbox /= pXbox2) || pYbox/=pYbox2 - 50) && ((pXbox3 /= pXbox2) || pYbox3/=pYbox2 - 50)) (moveBoxDown box2)
+              else do if (pX == pXbox3 && pY-50==pYbox3)
+                        then when ((pYbox3 - 50 <= h) && ((pXbox2 /= pXbox3) || pYbox2/=pYbox3-50) && ((pXbox /= pXbox3) || pYbox/=pYbox3-50)) (moveBoxDown box3)
+                        else do if (pY - 75 >= 0)
+                                  then do (setObjectPosition (pX,(pY-50)) guy)
+                                  else do (setObjectPosition (pX,25) guy)
 
 moveBoxRight :: SokobanObject -> SokobanAction ()
 moveBoxRight box = do
@@ -236,6 +249,7 @@ gameCycle :: SokobanAction ()
 gameCycle = do
  (Score n) <- getGameAttribute
  state <- getGameState
+ printOnScreen (show ("Numero de Passos: ") ++ show n) TimesRoman24 (0,0) 1.0 1.0 1.0
  case state of
    (GameInit levelInit) -> do
     setGameState (Level levelInit)
@@ -243,8 +257,11 @@ gameCycle = do
    (Level level) -> do
     case level of
       1 -> levelOne (Score n)
-      2 -> levelTwo (Score n)
-      3 -> levelThree (Score n)
+      2 -> beforeTwo (Score n)
+      3 -> levelTwo (Score n)
+      4 -> beforeThree (Score n)
+      5 -> levelThree (Score n)
+      6 -> endGame (Score n)
 
  --Rafael mandou usar setObjectCurrentPicture pra mudar a textura de um obj
 
@@ -267,6 +284,15 @@ levelOne (Score n) = do
  col31 <- objectsCollision box3 endPoint
  col32 <- objectsCollision box3 endPoint2
  col33 <- objectsCollision box3 endPoint3
+ if (col11 || col12 || col13)
+   then setObjectCurrentPicture 3 box
+   else setObjectCurrentPicture 1 box
+ if (col21 || col22 || col23)
+   then setObjectCurrentPicture 3 box2
+   else setObjectCurrentPicture 1 box2
+ if (col31 || col32 || col33)
+   then setObjectCurrentPicture 3 box3
+   else setObjectCurrentPicture 1 box3
  when (col11 && col22 && col33) (setGameState (GameInit 2))
  when (col11 && col23 && col32) (setGameState (GameInit 2))
  when (col12 && col21 && col33) (setGameState (GameInit 2))
@@ -274,8 +300,8 @@ levelOne (Score n) = do
  when (col13 && col21 && col32) (setGameState (GameInit 2))
  when (col13 && col22 && col31) (setGameState (GameInit 2))
 
-levelTwo :: GameAttribute -> SokobanAction()
-levelTwo (Score n) = do
+beforeTwo :: GameAttribute -> SokobanAction()
+beforeTwo (Score n) = do
  setCurrentMapIndex 1
  guy <- findObject "guy" "guyGroup"
  box <- findObject "box" "boxGroup"
@@ -284,25 +310,20 @@ levelTwo (Score n) = do
  endPoint <- findObject "endPoint" "endGroup"
  endPoint2 <- findObject "endPoint2" "endGroup"
  endPoint3 <- findObject "endPoint3" "endGroup"
- col11 <- objectsCollision box endPoint
- col12 <- objectsCollision box endPoint2
- col13 <- objectsCollision box endPoint3
- col21 <- objectsCollision box2 endPoint
- col22 <- objectsCollision box2 endPoint2
- col23 <- objectsCollision box2 endPoint3
- col31 <- objectsCollision box3 endPoint
- col32 <- objectsCollision box3 endPoint2
- col33 <- objectsCollision box3 endPoint3
- when (col11 && col22 && col33) (setGameState (GameInit 3))
- when (col11 && col23 && col32) (setGameState (GameInit 3))
- when (col12 && col21 && col33) (setGameState (GameInit 3))
- when (col12 && col23 && col31) (setGameState (GameInit 3))
- when (col13 && col21 && col32) (setGameState (GameInit 3))
- when (col13 && col22 && col31) (setGameState (GameInit 3))
+ setObjectPosition (25,25) guy
+ setObjectPosition (75,125) box
+ setObjectPosition (125,75) box2
+ setObjectPosition (275,275) box3
+ setObjectPosition (375,375) endPoint
+ setObjectPosition (75,375) endPoint2
+ setObjectPosition (475,475) endPoint3
+ setObjectCurrentPicture 1 box
+ setObjectCurrentPicture 1 box2
+ setObjectCurrentPicture 1 box3
+ setGameState (GameInit 3)
 
-levelThree :: GameAttribute -> SokobanAction()
-levelThree (Score n) = do
- setCurrentMapIndex 2
+levelTwo :: GameAttribute -> SokobanAction()
+levelTwo (Score n) = do
  guy <- findObject "guy" "guyGroup"
  box <- findObject "box" "boxGroup"
  box2 <- findObject "box2" "boxGroup"
@@ -319,9 +340,77 @@ levelThree (Score n) = do
  col31 <- objectsCollision box3 endPoint
  col32 <- objectsCollision box3 endPoint2
  col33 <- objectsCollision box3 endPoint3
- when (col11 && col22 && col33) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
- when (col11 && col23 && col32) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
- when (col12 && col21 && col33) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
- when (col12 && col23 && col31) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
- when (col13 && col21 && col32) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
- when (col13 && col22 && col31) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ if (col11 || col12 || col13)
+   then setObjectCurrentPicture 3 box
+   else setObjectCurrentPicture 1 box
+ if (col21 || col22 || col23)
+   then setObjectCurrentPicture 3 box2
+   else setObjectCurrentPicture 1 box2
+ if (col31 || col32 || col33)
+   then setObjectCurrentPicture 3 box3
+   else setObjectCurrentPicture 1 box3
+ when (col11 && col22 && col33) (setGameState (GameInit 4))
+ when (col11 && col23 && col32) (setGameState (GameInit 4))
+ when (col12 && col21 && col33) (setGameState (GameInit 4))
+ when (col12 && col23 && col31) (setGameState (GameInit 4))
+ when (col13 && col21 && col32) (setGameState (GameInit 4))
+ when (col13 && col22 && col31) (setGameState (GameInit 4))
+
+beforeThree :: GameAttribute -> SokobanAction()
+beforeThree (Score n) = do
+ setCurrentMapIndex 2
+ guy <- findObject "guy" "guyGroup"
+ box <- findObject "box" "boxGroup"
+ box2 <- findObject "box2" "boxGroup"
+ box3 <- findObject "box3" "boxGroup"
+ endPoint <- findObject "endPoint" "endGroup"
+ endPoint2 <- findObject "endPoint2" "endGroup"
+ endPoint3 <- findObject "endPoint3" "endGroup"
+ setObjectPosition (425,425) guy
+ setObjectPosition (75,125) box
+ setObjectPosition (175,75) box2
+ setObjectPosition (275,275) box3
+ setObjectPosition (325,325) endPoint
+ setObjectPosition (75,375) endPoint2
+ setObjectPosition (225,225) endPoint3
+ setGameState (GameInit 5)
+
+levelThree :: GameAttribute -> SokobanAction()
+levelThree (Score n) = do
+ guy <- findObject "guy" "guyGroup"
+ box <- findObject "box" "boxGroup"
+ box2 <- findObject "box2" "boxGroup"
+ box3 <- findObject "box3" "boxGroup"
+ endPoint <- findObject "endPoint" "endGroup"
+ endPoint2 <- findObject "endPoint2" "endGroup"
+ endPoint3 <- findObject "endPoint3" "endGroup"
+ col11 <- objectsCollision box endPoint
+ col12 <- objectsCollision box endPoint2
+ col13 <- objectsCollision box endPoint3
+ col21 <- objectsCollision box2 endPoint
+ col22 <- objectsCollision box2 endPoint2
+ col23 <- objectsCollision box2 endPoint3
+ col31 <- objectsCollision box3 endPoint
+ col32 <- objectsCollision box3 endPoint2
+ col33 <- objectsCollision box3 endPoint3
+ if (col11 || col12 || col13)
+   then setObjectCurrentPicture 3 box
+   else setObjectCurrentPicture 1 box
+ if (col21 || col22 || col23)
+   then setObjectCurrentPicture 3 box2
+   else setObjectCurrentPicture 1 box2
+ if (col31 || col32 || col33)
+   then setObjectCurrentPicture 3 box3
+   else setObjectCurrentPicture 1 box3
+ when (col11 && col22 && col33) (setGameState (GameInit 6))
+ when (col11 && col23 && col32) (setGameState (GameInit 6))
+ when (col12 && col21 && col33) (setGameState (GameInit 6))
+ when (col12 && col23 && col31) (setGameState (GameInit 6))
+ when (col13 && col21 && col32) (setGameState (GameInit 6))
+ when (col13 && col22 && col31) (setGameState (GameInit 6))
+
+endGame :: GameAttribute -> SokobanAction()
+endGame (Score n) = do
+  printOnScreen (show ("Parabens! Seu score foi: ") ++ show n) TimesRoman24 (0, height - 24) 1.0 1.0 1.0
+  guy <- findObject "guy" "guyGroup"
+  setObjectAsleep True guy
