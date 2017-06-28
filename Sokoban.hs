@@ -10,13 +10,38 @@ height = 500
 w = fromIntegral width :: GLdouble
 h = fromIntegral height :: GLdouble
 
-type PongAction a = IOGame GameAttribute () () () a
+type SokobanAction a = IOGame GameAttribute () () () a
+data TileAttribute = NoTileAttribute
+type SokobanTile = Tile TileAttribute
+type SokobanMap = TileMatrix TileAttribute
+
+bmpList :: FilePictureList
+bmpList = [("tiles.bmp", Nothing),
+           ("tile.bmp", Nothing),
+           ("box.bmp", Nothing)]
+
+tileSize :: Double
+tileSize = 50.0
+
+t::SokobanTile
+t = (1, False, 0.0, NoTileAttribute)
+
+map1 :: SokobanMap
+map1 = [[t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t]]
 
 main :: IO ()
 main = do
         let winConfig = ((0,0),(width,height),"Sokoban")
-            bmpList = [("floor.bmp", Nothing)]
-            gameMap = textureMap 0 50 50 w h
+            gameMap = tileMap map1 tileSize tileSize
             guy    = objectGroup "guyGroup"  [createGuy]
             box   = objectGroup "boxGroup" [createBox]
             endPoint = objectGroup "endGroup" [createEndPoint]
@@ -33,8 +58,7 @@ createGuy = let guyPic = Basic (Circle 10.0 1.0 0.0 1.0 Filled)
              in object "guy" guyPic False (((w/2)-25),25) (0,0) ()
 
 createBox :: GameObject ()
-createBox = let boxBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
-                boxPic = Basic (Polyg boxBound 1.0 1.0 0.0 Filled)
+createBox = let boxPic = Tex (50,50) 1
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
 createEndPoint :: GameObject ()
