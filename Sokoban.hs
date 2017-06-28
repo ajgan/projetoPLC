@@ -10,15 +10,18 @@ height = 500
 w = fromIntegral width :: GLdouble
 h = fromIntegral height :: GLdouble
 
-type SokobanAction a = IOGame GameAttribute () () () a
+type SokobanAction a = IOGame GameAttribute () () TileAttribute a
 data TileAttribute = NoTileAttribute
 type SokobanTile = Tile TileAttribute
 type SokobanMap = TileMatrix TileAttribute
 
+magenta :: InvList
+magenta = Just [(255,0,255)]
+
 bmpList :: FilePictureList
 bmpList = [("tiles.bmp", Nothing),
            ("tile.bmp", Nothing),
-           ("box.bmp", Nothing)]
+           ("box.bmp", magenta)]
 
 tileSize :: Double
 tileSize = 50.0
@@ -58,7 +61,7 @@ createGuy = let guyPic = Basic (Circle 10.0 1.0 0.0 1.0 Filled)
              in object "guy" guyPic False (((w/2)-25),25) (0,0) ()
 
 createBox :: GameObject ()
-createBox = let boxPic = Tex (50,50) 1
+createBox = let boxPic = Tex (tileSize , tileSize) 2
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
 createEndPoint :: GameObject ()
@@ -66,7 +69,7 @@ createEndPoint = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
                  in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
 
-walkRight :: Modifiers -> Position -> IOGame GameAttribute () () () ()
+walkRight :: Modifiers -> Position -> SokobanAction ()
 walkRight _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
@@ -79,7 +82,7 @@ walkRight _ _ = do
              else do (setObjectPosition ((w - 25),pY) obj)
 
 
-walkLeft :: Modifiers -> Position -> IOGame GameAttribute () () () ()
+walkLeft :: Modifiers -> Position -> SokobanAction ()
 walkLeft _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
@@ -91,7 +94,7 @@ walkLeft _ _ = do
              then do (setObjectPosition ((pX - 50),pY) obj)
              else do (setObjectPosition (25,pY) obj)
 
-walkUp :: Modifiers -> Position -> IOGame GameAttribute () () () ()
+walkUp :: Modifiers -> Position -> SokobanAction ()
 walkUp _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
@@ -103,7 +106,7 @@ walkUp _ _ = do
              then do (setObjectPosition (pX,(pY + 50)) obj)
              else do (setObjectPosition (pX,(w - 25)) obj)
 
-walkDown :: Modifiers -> Position -> IOGame GameAttribute () () () ()
+walkDown :: Modifiers -> Position -> SokobanAction ()
 walkDown _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
@@ -115,19 +118,19 @@ walkDown _ _ = do
              then do (setObjectPosition (pX,(pY - 50)) obj)
              else do (setObjectPosition (pX,25) obj)
 
-moveBoxRight :: IOGame GameAttribute () () () ()
+moveBoxRight :: SokobanAction ()
 moveBoxRight = do
  obj <- findObject "box" "boxGroup"
  obj2 <-findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
- (pX2,pY2) <- getObjectPosition obj2	
+ (pX2,pY2) <- getObjectPosition obj2
  if (pX + 75 <= w)
    then do (setObjectPosition ((pX + 50),pY) obj)
-	   (setObjectPosition ((pX2 + 50),pY2) obj2)
+           (setObjectPosition ((pX2 + 50),pY2) obj2)
    else do (setObjectPosition ((w - 25),pY) obj)
-	   (setObjectPosition ((w - 25),pY2) obj2)
+           (setObjectPosition ((w - 25),pY2) obj2)
 
-moveBoxLeft :: IOGame GameAttribute () () () ()
+moveBoxLeft :: SokobanAction ()
 moveBoxLeft = do
  obj <- findObject "box" "boxGroup"
  obj2 <-findObject "guy" "guyGroup"
@@ -135,11 +138,11 @@ moveBoxLeft = do
  (pX2,pY2) <- getObjectPosition obj2
  if (pX - 75 >= 0)
    then do (setObjectPosition ((pX - 50),pY) obj)
-	   (setObjectPosition ((pX2 - 50),pY2) obj2)
+           (setObjectPosition ((pX2 - 50),pY2) obj2)
    else do (setObjectPosition (25,pY) obj)
-	   (setObjectPosition (25,pY2) obj2)
+           (setObjectPosition (25,pY2) obj2)
 
-moveBoxUp :: IOGame GameAttribute () () () ()
+moveBoxUp :: SokobanAction ()
 moveBoxUp = do
  obj <- findObject "box" "boxGroup"
  obj2 <- findObject "guy" "guyGroup"
@@ -147,11 +150,11 @@ moveBoxUp = do
  (pX2,pY2) <- getObjectPosition obj2
  if (pY + 75 <= h)
    then do (setObjectPosition (pX,(pY + 50)) obj)
-	   (setObjectPosition (pX2,(pY2 + 50)) obj2)
+           (setObjectPosition (pX2,(pY2 + 50)) obj2)
    else do (setObjectPosition (pX,(w - 25)) obj)
-	   (setObjectPosition (pX2,(w - 25)) obj2)
+           (setObjectPosition (pX2,(w - 25)) obj2)
 
-moveBoxDown :: IOGame GameAttribute () () () ()
+moveBoxDown :: SokobanAction ()
 moveBoxDown = do
  obj <- findObject "box" "boxGroup"
  obj2 <- findObject "guy" "guyGroup"
@@ -159,11 +162,11 @@ moveBoxDown = do
  (pX2,pY2) <- getObjectPosition obj2
  if (pY - 75 >= 0)
    then do (setObjectPosition (pX,(pY - 50)) obj)
-	   (setObjectPosition (pX2,(pY2 - 50)) obj2)
+           (setObjectPosition (pX2,(pY2 - 50)) obj2)
    else do (setObjectPosition (pX,25) obj)
-	   (setObjectPosition (pX2,25) obj2)
+           (setObjectPosition (pX2,25) obj2)
 
-gameCycle :: IOGame GameAttribute () () () ()
+gameCycle :: SokobanAction ()
 gameCycle = do
  (Score n) <- getGameAttribute
  printOnScreen (show n) TimesRoman24 (0,0) 1.0 1.0 1.0
