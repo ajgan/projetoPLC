@@ -4,12 +4,15 @@ import Graphics.UI.Fungen
 import Graphics.Rendering.OpenGL (GLdouble)
 
 data GameAttribute = Score Int
+data GameState = Level Int | GameInit Int
+type SokobanObject = GameObject ()
+
 
 width = 500
 height = 500
-w = fromIntegral width :: GLdouble
-h = fromIntegral height :: GLdouble
-type SokobanAction a = IOGame GameAttribute () () TileAttribute a
+w = 500.0
+h = 500.0
+type SokobanAction a = IOGame GameAttribute () GameState TileAttribute a
 data TileAttribute = NoTileAttribute
 type SokobanTile = Tile TileAttribute
 type SokobanMap = TileMatrix TileAttribute
@@ -19,13 +22,19 @@ magenta = Just [(255,0,255)]
 
 bmpList :: FilePictureList
 bmpList = [("tile.bmp", Nothing),
-           ("box.bmp", magenta)]
+           ("box.bmp", magenta),
+           ("wall.bmp", Nothing),
+           ("greenSquare.bmp", Nothing),
+           ("redSquare.bmp", Nothing)]
 
 tileSize :: GLdouble
-tileSize = 50.0
+tileSize = width/10
 
 t::SokobanTile
 t = (0, False, 0.0, NoTileAttribute)
+
+m::SokobanTile
+m = (2, False, 0.0, NoTileAttribute)
 
 map1 :: SokobanMap
 map1 = [[t, t, t, t, t, t, t, t, t, t],
@@ -39,67 +48,126 @@ map1 = [[t, t, t, t, t, t, t, t, t, t],
         [t, t, t, t, t, t, t, t, t, t],
         [t, t, t, t, t, t, t, t, t, t]]
 
+map2 :: SokobanMap
+map2 = [[m, t, t, t, t, t, t, t, t, m],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [m, t, t, t, t, t, t, t, t, m]]
+
+map3 :: SokobanMap
+map3 = [[m, t, t, t, t, t, t, t, t, m],
+        [t, m, t, t, t, t, t, t, m, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, t, t, t, t, t, t, t, t, t],
+        [t, m, t, t, t, t, t, t, m, t],
+        [m, t, t, t, t, t, t, t, t, m]]
+
 main :: IO ()
 main = do
-        let winConfig = ((0,0),(width,height),"Sokoban")
-            gameMap = tileMap map1 tileSize tileSize
-            guy    = objectGroup "guyGroup"  [createGuy]
-            box   = objectGroup "boxGroup" [createBox]
-            endPoint = objectGroup "endGroup" [createEndPoint]
+        let winConfig = ((0,0),(500,500),"Sokoban")
+            gameMap = multiMap [(tileMap map1 tileSize tileSize),
+                                (tileMap map2 tileSize tileSize),
+                                (tileMap map3 tileSize tileSize)] 0
+            guy = objectGroup "guyGroup"  [createGuy]
+            box = objectGroup "boxGroup" [createBox, createBox2, createBox3]
+            endPoint = objectGroup "endGroup" [createEndPoint, createEndPoint2, createEndPoint3]
             initScore = Score 0
             input = [(Char 'w', Press, walkUp),
                      (Char 'a', Press, walkLeft),
                      (Char 's', Press, walkDown),
                      (Char 'd', Press, walkRight),
                      (Char 'p', Press, \_ _ -> funExit)]
-        funInit winConfig gameMap [guy,box,endPoint] () initScore input gameCycle (Timer 40) bmpList
+        funInit winConfig gameMap [guy,box,endPoint] (GameInit 1) initScore input gameCycle (Timer 40) bmpList
 
-createGuy :: GameObject ()
+createGuy :: SokobanObject
 createGuy = let guyPic = Basic (Circle 10.0 1.0 0.0 1.0 Filled)
              in object "guy" guyPic False (((w/2)-25),25) (0,0) ()
 
-createBox :: GameObject ()
+createBox :: SokobanObject
 createBox = let boxPic = Tex (tileSize , tileSize) 1
             in object "box" boxPic False (((w/2)-25),((h/2)-25)) (0,0) ()
 
-createEndPoint :: GameObject ()
+createBox2 :: SokobanObject
+createBox2 = let boxPic = Tex (tileSize , tileSize) 1
+             in object "box2" boxPic False (((w/2)-75),((h/2)-25)) (0,0) ()
+
+createBox3 :: SokobanObject
+createBox3 = let boxPic = Tex (tileSize , tileSize) 1
+             in object "box3" boxPic False (((w/2)+25),((h/2)-25)) (0,0) ()
+
+createEndPoint :: SokobanObject
 createEndPoint = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
                  in object "endPoint" endPointPic False (((w/2)-25),(((3*h)/4))) (0,0) ()
 
+createEndPoint2 :: SokobanObject
+createEndPoint2 = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
+                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
+                  in object "endPoint2" endPointPic False (((w/2)-75),(((3*h)/4))) (0,0) ()
+
+createEndPoint3 :: SokobanObject
+createEndPoint3 = let endPointBound = [(-25,-25),(25,-25),(25,25),(-25,25)]
+                      endPointPic = Basic (Polyg endPointBound 1.0 0.0 0.0 Unfilled)
+                  in object "endPoint3" endPointPic False (((w/2)+25),(((3*h)/4))) (0,0) ()
+
 walkRight :: Modifiers -> Position -> SokobanAction ()
 walkRight _ _ = do
- obj <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
- obj2 <- findObject "box" "boxGroup"
- (p2X,p2Y) <- getObjectPosition obj2
- if ((pX + 50) == p2X && pY==p2Y)
-   then when (p2X + 75 <= w) moveBoxRight
-   else do if (pX + 75 <= w)
-             then do (setObjectPosition ((pX + 50),pY) obj)
-             else do (setObjectPosition ((w - 25),pY) obj)
-
+ guy <- findObject "guy" "guyGroup"
+ (pX,pY) <- getObjectPosition guy
+ box <- findObject "box" "boxGroup"
+ (pXbox,pYbox) <- getObjectPosition box
+ box2 <- findObject "box2" "boxGroup"
+ (pXbox2,pYbox2) <- getObjectPosition box2
+ box3 <- findObject "box3" "boxGroup"
+ (pXbox3,pYbox3) <- getObjectPosition box3
+ if ((pX + 50) == pXbox && pY==pYbox)
+   then when ((pXbox + 75 <= w) && ((pXbox2 /= pXbox + 50) || pYbox2/=pYbox) && ((pXbox3 /= pXbox + 50) || pYbox3 /= pYbox)) (moveBoxRight box)
+   else do if ((pX + 50) == pXbox2 && pY==pYbox2)
+             then when ((pXbox2 + 75 <= w) && ((pXbox /= pXbox2 + 50) || pYbox/=pYbox2) && ((pXbox3 /= pXbox2 + 50) || pYbox3/=pYbox2)) (moveBoxRight box2)
+             else do if ((pX + 50) == pXbox3 && pY==pYbox3)
+                       then when ((pXbox3 + 75 <= w) && ((pXbox2 /= pXbox3 + 50) || pYbox2/=pYbox3) && ((pXbox /= pXbox3 + 50) || pYbox/=pYbox3)) (moveBoxRight box3)
+                       else do if (pX + 75 <= w)
+                                 then do (setObjectPosition ((pX + 50),pY) guy)
+                                 else do (setObjectPosition ((w - 25),pY) guy)
 
 walkLeft :: Modifiers -> Position -> SokobanAction ()
 walkLeft _ _ = do
- obj <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
- obj2 <- findObject "box" "boxGroup"
- (p2X,p2Y) <- getObjectPosition obj2
- if ((pX - 50) == p2X && pY==p2Y)
-   then when (p2X - 75 >= 0) moveBoxLeft
-   else do if (pX - 75 >= 0)
-             then do (setObjectPosition ((pX - 50),pY) obj)
-             else do (setObjectPosition (25,pY) obj)
+  guy <- findObject "guy" "guyGroup"
+  (pX,pY) <- getObjectPosition guy
+  box <- findObject "box" "boxGroup"
+  (pXbox,pYbox) <- getObjectPosition box
+  box2 <- findObject "box2" "boxGroup"
+  (pXbox2,pYbox2) <- getObjectPosition box2
+  box3 <- findObject "box3" "boxGroup"
+  (pXbox3,pYbox3) <- getObjectPosition box3
+  if ((pX - 50) == pXbox && pY==pYbox)
+    then when ((pXbox - 75 >= 0) && ((pXbox2 /= pXbox - 50) || pYbox2/=pYbox) && ((pXbox3 /= pXbox - 50) || pYbox3 /= pYbox)) (moveBoxLeft box)
+    else do if ((pX - 50) == pXbox2 && pY==pYbox2)
+              then when ((pXbox2 - 75 >= 0) && ((pXbox /= pXbox2 - 50) || pYbox/=pYbox2) && ((pXbox3 /= pXbox2 - 50) || pYbox3/=pYbox2)) (moveBoxLeft box2)
+              else do if ((pX - 50) == pXbox3 && pY==pYbox3)
+                        then when ((pXbox3 - 75 >= 0) && ((pXbox2 /= pXbox3 - 50) || pYbox2/=pYbox3) && ((pXbox /= pXbox3 - 50) || pYbox/=pYbox3)) (moveBoxLeft box3)
+                        else do if (pX - 75 >= 0)
+                                  then do (setObjectPosition ((pX - 50),pY) guy)
+                                  else do (setObjectPosition (25,pY) guy)
 
 walkUp :: Modifiers -> Position -> SokobanAction ()
 walkUp _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
- obj2 <- findObject "box" "boxGroup"
- (p2X,p2Y) <- getObjectPosition obj2
- if (pX == p2X && (pY + 50)==p2Y)
-   then when (p2Y + 75 <= h) moveBoxUp
+ box <- findObject "box" "boxGroup"
+ (pXbox,pYbox) <- getObjectPosition box
+ if (pX == pXbox && (pY + 50)==pYbox)
+   then when (pYbox + 75 <= h) (moveBoxUp box)
    else do if (pY + 75 <= h)
              then do (setObjectPosition (pX,(pY + 50)) obj)
              else do (setObjectPosition (pX,(w - 25)) obj)
@@ -108,77 +176,152 @@ walkDown :: Modifiers -> Position -> SokobanAction ()
 walkDown _ _ = do
  obj <- findObject "guy" "guyGroup"
  (pX,pY) <- getObjectPosition obj
- obj2 <- findObject "box" "boxGroup"
- (p2X,p2Y) <- getObjectPosition obj2
- if (pX == p2X && (pY - 50)==p2Y)
-   then when (p2Y - 75 >= 0) moveBoxDown
+ box <- findObject "box" "boxGroup"
+ (pXbox,pYbox) <- getObjectPosition box
+ if (pX == pXbox && (pY - 50)==pYbox)
+   then when (pYbox - 75 >= 0) (moveBoxDown box)
    else do if (pY - 75 >= 0)
              then do (setObjectPosition (pX,(pY - 50)) obj)
              else do (setObjectPosition (pX,25) obj)
 
-moveBoxRight :: SokobanAction ()
-moveBoxRight = do
- obj <- findObject "box" "boxGroup"
+moveBoxRight :: SokobanObject -> SokobanAction ()
+moveBoxRight box = do
+ --obj <- findObject "box" "boxGroup"
  obj2 <-findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
+ (pX,pY) <- getObjectPosition box
  (pX2,pY2) <- getObjectPosition obj2
  if (pX + 75 <= w)
-   then do (setObjectPosition ((pX + 50),pY) obj)
+   then do (setObjectPosition ((pX + 50),pY) box)
            (setObjectPosition ((pX2 + 50),pY2) obj2)
-   else do (setObjectPosition ((w - 25),pY) obj)
+   else do (setObjectPosition ((w - 25),pY) box)
            (setObjectPosition ((w - 25),pY2) obj2)
 
-moveBoxLeft :: SokobanAction ()
-moveBoxLeft = do
- obj <- findObject "box" "boxGroup"
+moveBoxLeft :: SokobanObject -> SokobanAction ()
+moveBoxLeft box = do
+ --obj <- findObject "box" "boxGroup"
  obj2 <-findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
+ (pX,pY) <- getObjectPosition box
  (pX2,pY2) <- getObjectPosition obj2
  if (pX - 75 >= 0)
-   then do (setObjectPosition ((pX - 50),pY) obj)
+   then do (setObjectPosition ((pX - 50),pY) box)
            (setObjectPosition ((pX2 - 50),pY2) obj2)
-   else do (setObjectPosition (25,pY) obj)
+   else do (setObjectPosition (25,pY) box)
            (setObjectPosition (25,pY2) obj2)
 
-moveBoxUp :: SokobanAction ()
-moveBoxUp = do
- obj <- findObject "box" "boxGroup"
+moveBoxUp :: SokobanObject -> SokobanAction ()
+moveBoxUp box = do
+ --obj <- findObject "box" "boxGroup"
  obj2 <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
+ (pX,pY) <- getObjectPosition box
  (pX2,pY2) <- getObjectPosition obj2
  if (pY + 75 <= h)
-   then do (setObjectPosition (pX,(pY + 50)) obj)
+   then do (setObjectPosition (pX,(pY + 50)) box)
            (setObjectPosition (pX2,(pY2 + 50)) obj2)
-   else do (setObjectPosition (pX,(w - 25)) obj)
+   else do (setObjectPosition (pX,(w - 25)) box)
            (setObjectPosition (pX2,(w - 25)) obj2)
 
-moveBoxDown :: SokobanAction ()
-moveBoxDown = do
- obj <- findObject "box" "boxGroup"
+moveBoxDown :: SokobanObject -> SokobanAction ()
+moveBoxDown box = do
+ --obj <- findObject "box" "boxGroup"
  obj2 <- findObject "guy" "guyGroup"
- (pX,pY) <- getObjectPosition obj
+ (pX,pY) <- getObjectPosition box
  (pX2,pY2) <- getObjectPosition obj2
  if (pY - 75 >= 0)
-   then do (setObjectPosition (pX,(pY - 50)) obj)
+   then do (setObjectPosition (pX,(pY - 50)) box)
            (setObjectPosition (pX2,(pY2 - 50)) obj2)
-   else do (setObjectPosition (pX,25) obj)
+   else do (setObjectPosition (pX,25) box)
            (setObjectPosition (pX2,25) obj2)
 
 gameCycle :: SokobanAction ()
 gameCycle = do
  (Score n) <- getGameAttribute
- printOnScreen (show n) TimesRoman24 (0,0) 1.0 1.0 1.0
- guy <- findObject "guy" "guyGroup"
- box <- findObject "box" "boxGroup"
- endPoint <- findObject "endPoint" "endGroup"
- (pX,pY) <- getObjectPosition guy
- printOnScreen (show pX) TimesRoman24 (0,100) 1.0 1.0 1.0
- printOnScreen (show pY) TimesRoman24 (0,150) 1.0 1.0 1.0
- (pX2,pY2) <- getObjectPosition box
- printOnScreen (show pX2) TimesRoman24 (0,200) 1.0 1.0 1.0
- printOnScreen (show pY2) TimesRoman24 (0,250) 1.0 1.0 1.0
- col <- objectsCollision guy box
- col2 <- objectsCollision box endPoint
- when col2 (setGameAttribute (Score (n + 10)))
+ state <- getGameState
+ case state of
+   (GameInit levelInit) -> do
+    setGameState (Level levelInit)
+    printOnScreen (show ("Nivel ") ++ show levelInit) TimesRoman24 (0,0) 1.0 1.0 1.0
+   (Level level) -> do
+    case level of
+      1 -> levelOne (Score n)
+      2 -> levelTwo (Score n)
+      3 -> levelThree (Score n)
 
  --Rafael mandou usar setObjectCurrentPicture pra mudar a textura de um obj
+
+levelOne :: GameAttribute -> SokobanAction()
+levelOne (Score n) = do
+ setCurrentMapIndex 0
+ guy <- findObject "guy" "guyGroup"
+ box <- findObject "box" "boxGroup"
+ box2 <- findObject "box2" "boxGroup"
+ box3 <- findObject "box3" "boxGroup"
+ endPoint <- findObject "endPoint" "endGroup"
+ endPoint2 <- findObject "endPoint2" "endGroup"
+ endPoint3 <- findObject "endPoint3" "endGroup"
+ col11 <- objectsCollision box endPoint
+ col12 <- objectsCollision box endPoint2
+ col13 <- objectsCollision box endPoint3
+ col21 <- objectsCollision box2 endPoint
+ col22 <- objectsCollision box2 endPoint2
+ col23 <- objectsCollision box2 endPoint3
+ col31 <- objectsCollision box3 endPoint
+ col32 <- objectsCollision box3 endPoint2
+ col33 <- objectsCollision box3 endPoint3
+ when (col11 && col22 && col33) (setGameState (GameInit 2))
+ when (col11 && col23 && col32) (setGameState (GameInit 2))
+ when (col12 && col21 && col33) (setGameState (GameInit 2))
+ when (col12 && col23 && col31) (setGameState (GameInit 2))
+ when (col13 && col21 && col32) (setGameState (GameInit 2))
+ when (col13 && col22 && col31) (setGameState (GameInit 2))
+
+levelTwo :: GameAttribute -> SokobanAction()
+levelTwo (Score n) = do
+ setCurrentMapIndex 1
+ guy <- findObject "guy" "guyGroup"
+ box <- findObject "box" "boxGroup"
+ box2 <- findObject "box2" "boxGroup"
+ box3 <- findObject "box3" "boxGroup"
+ endPoint <- findObject "endPoint" "endGroup"
+ endPoint2 <- findObject "endPoint2" "endGroup"
+ endPoint3 <- findObject "endPoint3" "endGroup"
+ col11 <- objectsCollision box endPoint
+ col12 <- objectsCollision box endPoint2
+ col13 <- objectsCollision box endPoint3
+ col21 <- objectsCollision box2 endPoint
+ col22 <- objectsCollision box2 endPoint2
+ col23 <- objectsCollision box2 endPoint3
+ col31 <- objectsCollision box3 endPoint
+ col32 <- objectsCollision box3 endPoint2
+ col33 <- objectsCollision box3 endPoint3
+ when (col11 && col22 && col33) (setGameState (GameInit 3))
+ when (col11 && col23 && col32) (setGameState (GameInit 3))
+ when (col12 && col21 && col33) (setGameState (GameInit 3))
+ when (col12 && col23 && col31) (setGameState (GameInit 3))
+ when (col13 && col21 && col32) (setGameState (GameInit 3))
+ when (col13 && col22 && col31) (setGameState (GameInit 3))
+
+levelThree :: GameAttribute -> SokobanAction()
+levelThree (Score n) = do
+ setCurrentMapIndex 2
+ guy <- findObject "guy" "guyGroup"
+ box <- findObject "box" "boxGroup"
+ box2 <- findObject "box2" "boxGroup"
+ box3 <- findObject "box3" "boxGroup"
+ endPoint <- findObject "endPoint" "endGroup"
+ endPoint2 <- findObject "endPoint2" "endGroup"
+ endPoint3 <- findObject "endPoint3" "endGroup"
+ col11 <- objectsCollision box endPoint
+ col12 <- objectsCollision box endPoint2
+ col13 <- objectsCollision box endPoint3
+ col21 <- objectsCollision box2 endPoint
+ col22 <- objectsCollision box2 endPoint2
+ col23 <- objectsCollision box2 endPoint3
+ col31 <- objectsCollision box3 endPoint
+ col32 <- objectsCollision box3 endPoint2
+ col33 <- objectsCollision box3 endPoint3
+ when (col11 && col22 && col33) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ when (col11 && col23 && col32) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ when (col12 && col21 && col33) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ when (col12 && col23 && col31) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ when (col13 && col21 && col32) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
+ when (col13 && col22 && col31) (printOnScreen (show ("Parabens")) TimesRoman24 (width/2,0) 1.0 1.0 1.0)
