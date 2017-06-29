@@ -25,7 +25,7 @@ bmpList = [("tile.bmp", Nothing),
            ("box.bmp", Nothing),
            ("wall.bmp", Nothing),
            ("greenBox.bmp", Nothing),
-           ("redSquare.bmp", Nothing),
+           ("blackX.bmp", magenta),
            ("GuyR.bmp", magenta),
            ("GuyL.bmp", magenta),
            ("GuyU.bmp", magenta),
@@ -41,40 +41,40 @@ m::SokobanTile
 m = (2, True, 0.0, NoTileAttribute)
 
 map1 :: SokobanMap
-map1 = [[t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t]]
+map1 = [[m, m, m, m, m, m, m, m, m, m],
+        [m, t, t, t, t, t, t, t, m, m],
+        [m, t, t, t, t, t, t, t, t, m],
+        [m, t, t, m, t, t, t, t, t, m],
+        [m, t, t, m, m, t, t, t, t, m],
+        [m, t, t, t, m, m, t, t, t, m],
+        [m, t, t, t, t, m, m, t, t, m],
+        [m, t, t, t, t, t, t, t, t, m],
+        [m, m, t, t, t, t, t, t, t, m],
+        [m, m, m, m, m, m, m, m, m, m]]
 
 map2 :: SokobanMap
-map2 = [[m, t, t, t, t, t, t, t, t, m],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [m, t, t, t, t, t, t, t, t, m]]
+map2 = [[m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, t, m, t, t, m, m, m],
+        [m, m, m, t, t, t, t, m, m, m],
+        [m, m, m, t, t, t, t, m, m, m],
+        [m, m, m, m, t, t, t, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m]]
 
 map3 :: SokobanMap
-map3 = [[m, t, t, t, t, t, t, t, t, m],
-        [t, m, t, t, t, t, t, t, m, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, t, t, t, t, t, t, t, t, t],
-        [t, m, t, t, t, t, t, t, m, t],
-        [m, t, t, t, t, t, t, t, t, m]]
+map3 = [[m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, t, t, t, t, m, m, m, t, m],
+        [m, t, t, m, t, m, t, t, t, m],
+        [m, t, t, m, t, m, t, t, t, m],
+        [m, t, t, t, t, t, t, t, m, m],
+        [m, t, t, t, m, m, t, t, m, m],
+        [m, m, m, m, m, m, t, t, m, m],
+        [m, m, m, m, m, m, m, m, m, m],
+        [m, m, m, m, m, m, m, m, m, m]]
 
 main :: IO ()
 main = do
@@ -308,7 +308,7 @@ gameCycle = do
  (Score n) <- getGameAttribute
  state <- getGameState
  printOnScreen (show ("Pressione 'p' para parar o jogo ou 'r' para recomecar")) Helvetica18 (0,10) 1.0 1.0 1.0
- printOnScreen (show ("Nivel ") ++ show (n)) TimesRoman24 (w-120,h-24) 1.0 1.0 1.0
+ printOnScreen (show ("Nivel ") ++ show (n)) TimesRoman24 (w-100,h-24) 1.0 1.0 1.0
  case state of
    (GameInit levelInit) -> do
     setGameState (Level levelInit)
@@ -333,14 +333,14 @@ beforeOne (Score n) = do
  endPoint2 <- findObject "endPoint2" "endGroup"
  endPoint3 <- findObject "endPoint3" "endGroup"
  setObjectAsleep False guy
- setObjectPosition (225,25) guy
- setObjectPosition (225,225) box
- setObjectPosition (275,225) box2
- setObjectPosition (175,225) box3
- setObjectPosition (225,375) endPoint
- setObjectPosition (275,375) endPoint2
- setObjectPosition (175,375) endPoint3
- setObjectCurrentPicture 7 guy
+ setObjectPosition (75,425) guy
+ setObjectPosition (375,175) box
+ setObjectPosition (325,125) box2
+ setObjectPosition (175,125) box3
+ setObjectPosition (175,225) endPoint
+ setObjectPosition (275,275) endPoint2
+ setObjectPosition (225,325) endPoint3
+ setObjectCurrentPicture 8 guy
  setObjectCurrentPicture 1 box
  setObjectCurrentPicture 1 box2
  setObjectCurrentPicture 1 box3
@@ -391,13 +391,13 @@ beforeTwo (Score n) = do
  endPoint <- findObject "endPoint" "endGroup"
  endPoint2 <- findObject "endPoint2" "endGroup"
  endPoint3 <- findObject "endPoint3" "endGroup"
- setObjectPosition (75,25) guy
- setObjectPosition (75,125) box
- setObjectPosition (125,75) box2
- setObjectPosition (275,275) box3
- setObjectPosition (375,375) endPoint
- setObjectPosition (75,375) endPoint2
- setObjectPosition (425,425) endPoint3
+ setObjectPosition (175,275) guy
+ setObjectPosition (225,275) box
+ setObjectPosition (275,275) box2
+ setObjectPosition (275,225) box3
+ setObjectPosition (175,325) endPoint
+ setObjectPosition (175,225) endPoint2
+ setObjectPosition (225,225) endPoint3
  setObjectCurrentPicture 7 guy
  setObjectCurrentPicture 1 box
  setObjectCurrentPicture 1 box2
@@ -449,13 +449,13 @@ beforeThree (Score n) = do
  endPoint <- findObject "endPoint" "endGroup"
  endPoint2 <- findObject "endPoint2" "endGroup"
  endPoint3 <- findObject "endPoint3" "endGroup"
- setObjectPosition (375,425) guy
- setObjectPosition (75,125) box
- setObjectPosition (175,75) box2
- setObjectPosition (275,275) box3
- setObjectPosition (325,325) endPoint
- setObjectPosition (75,375) endPoint2
- setObjectPosition (225,225) endPoint3
+ setObjectPosition (125,275) guy
+ setObjectPosition (225,275) box
+ setObjectPosition (375,275) box2
+ setObjectPosition (325,225) box3
+ setObjectPosition (225,325) endPoint
+ setObjectPosition (225,375) endPoint2
+ setObjectPosition (175,375) endPoint3
  setObjectCurrentPicture 7 guy
  setObjectCurrentPicture 1 box
  setObjectCurrentPicture 1 box2
