@@ -398,7 +398,7 @@ beforeTwo (Score n) = do
  setObjectPosition (175,325) endPoint
  setObjectPosition (175,225) endPoint2
  setObjectPosition (225,225) endPoint3
- setObjectCurrentPicture 7 guy
+ setObjectCurrentPicture 8 guy
  setObjectCurrentPicture 1 box
  setObjectCurrentPicture 1 box2
  setObjectCurrentPicture 1 box3
@@ -456,7 +456,7 @@ beforeThree (Score n) = do
  setObjectPosition (225,325) endPoint
  setObjectPosition (225,375) endPoint2
  setObjectPosition (175,375) endPoint3
- setObjectCurrentPicture 7 guy
+ setObjectCurrentPicture 8 guy
  setObjectCurrentPicture 1 box
  setObjectCurrentPicture 1 box2
  setObjectCurrentPicture 1 box3
