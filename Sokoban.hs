@@ -268,7 +268,7 @@ moveBoxLeft box = do
                             (setObjectPosition ((pX2 - 50),pY2) guy)
                     else do (setObjectPosition (25,pY) box)
                             (setObjectPosition (25,pY2) guy)
-
+-- gadelha eu te amo
 moveBoxUp :: SokobanObject -> SokobanAction ()
 moveBoxUp box = do
  guy <- findObject "guy" "guyGroup"
