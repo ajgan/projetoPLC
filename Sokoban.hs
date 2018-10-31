@@ -271,6 +271,7 @@ moveBoxLeft box = do
 -- gadelha eu te amo
 --amo voce
 --daria tudo, daria o mundo
+--SO POR VOCE
 moveBoxUp :: SokobanObject -> SokobanAction ()
 moveBoxUp box = do
  guy <- findObject "guy" "guyGroup"
